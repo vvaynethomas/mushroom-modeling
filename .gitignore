@@ -1,0 +1,12 @@
+# Local Python and Jupyter state; keep notebook outputs in version control.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Local editor and operating-system metadata.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
