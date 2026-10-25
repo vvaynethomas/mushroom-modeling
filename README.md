@@ -31,25 +31,31 @@ categorical features? Neither notebook establishes real-world edibility.
 
 ## Dataset and attribution
 
-Both notebooks request the same
-[DataHub CSV](https://datahub.io/machine-learning/mushroom/r/mushroom.csv).
-The dataset corresponds to the
-[UCI Machine Learning Repository's Mushroom dataset](https://archive.ics.uci.edu/dataset/73/mushroom),
-whose feature definitions explain the letter codes, including odor and the
-missing stalk-root marker `?`. Attribute the dataset to that source, separately
-from this repository's analysis.
+Both notebooks now load the official
+[UCI raw data](https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data)
+for the [Mushroom dataset](https://archive.ics.uci.edu/dataset/73/mushroom).
+Dataset attribution: Mushroom [Dataset], UCI Machine Learning Repository (1987),
+DOI [10.24432/C5959T](https://doi.org/10.24432/C5959T), licensed under
+[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+This attribution and license describe the dataset, separately from this
+repository's analysis. The UCI page defines the categorical letter codes.
 
-Saved `info()` outputs in both notebooks show 8,124 rows and 23 columns: 22
-categorical attributes plus the `class` label. They show 2,480 missing stalk-root
-values before filling. The UCI schema uses `?` for missing stalk-root values;
-these notebooks rely on the CSV exposing them as nulls. A replacement data source
-must preserve or explicitly reconcile that behavior and the column names
-(including the notebooks' `bruises%3F` rename).
+The raw file is headerless and class-first: 8,124 records, 22 categorical
+attributes plus `class` (`e`: 4,208; `p`: 3,916). Both loaders supply explicit
+column names and `header=None`, parse the 2,480 `?` stalk-root markers as missing
+with `na_values=['?']`, then restore the historical feature-first, class-last
+column order. The `bruises` name is supplied directly, rather than renamed from
+the old DataHub header `bruises%3F`. Existing categorical conversion and
+`Unknown` filling remain in place.
 
-No data file, checksum, or download date is committed. The exact original CSV
+No full dataset snapshot, checksum, or download date is committed. The exact original CSV
 snapshot and its equivalence to any current UCI download have not been verified.
 The original DataHub URL returned **HTTP 404** during the documentation check on
-2026-10-24; no replacement source was silently substituted.
+2026-10-24. The loader repair explicitly replaces that URL with UCI for future
+runs. Saved `info()` outputs also show 8,124 rows and 2,480 missing stalk-root
+values before filling, but matching counts do not prove snapshot equivalence.
+All saved outputs, execution counts, and analyses remain historical and unchanged;
+they were not regenerated with the repaired loaders.
 
 ## Saved results, not newly reproduced findings
 
@@ -74,17 +80,33 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m jupyterlab
 ```
 
-Open a notebook in that environment and run its cells from top to bottom only
-after resolving the dataset URL. The `graphviz` Python package is imported in
+The repaired loaders use the UCI endpoint above; loading the full dataset still
+requires network access. A complete top-to-bottom run has not been validated.
+The `graphviz` Python package is imported in
 the rule-mining notebook, but the current cells do not render a Graphviz tree;
 system Graphviz would be needed if that rendering were added.
 
-For this documentation pass, notebook JSON/schema validation and inspection of
-code and saved outputs were performed, along with a request to the original
-dataset URL. Neither notebook was executed end to end: the URL is unavailable
-and the local interpreter lacks the analysis packages. No new model results or
-figures were generated. Current package versions may require API changes; Ward
+Neither notebook was executed end to end for the loader repair. No new model
+results or figures were generated. Current package versions may require API changes; Ward
 linkage and Apriori can also be memory-intensive.
+
+### Offline loader regression checks
+
+The focused checks use Python's standard-library `unittest` runner and pandas
+only; pytest, Jupyter, and the modeling packages are not required. With pandas
+installed in the chosen environment, run from the repository root:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+The tests redirect each notebook's CSV request to a three-row, illustrative
+UCI-format fixture in `tests/fixtures/mushroom.data` (not a historical snapshot).
+They execute only the loader cells and the isolated existing `stalk-root` fill
+assignment: no data download, analysis/model cells, or notebook output writes.
+They check first-row retention, all 23 field mappings, feature/class ordering,
+categorical dtypes, `?` parsing, and `Unknown` filling without changing other
+columns. These checks do not establish full-notebook reproducibility.
 
 ## Limitations and later work
 
@@ -102,7 +124,7 @@ linkage and Apriori can also be memory-intensive.
   no taxonomic validation is provided. Dataset associations do not establish
   causation or applicability to mushrooms outside this dataset.
 
-A later reproducibility pass can establish a permitted, versioned data source,
+A later reproducibility pass can record a versioned snapshot and checksum,
 document a tested dependency set, and rerun both notebooks from clean kernels.
 Correcting leakage and adding meaningful held-out evaluation would be separate
-analysis work; this first pass preserves the original research and saved outputs.
+analysis work; this loader repair preserves the original research and saved outputs.
