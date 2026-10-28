@@ -1,7 +1,11 @@
-# mushroom-modeling
+# Mushroom modeling: patterns, clusters, and "good soup"
 
-Exploration and modeling of a mushroom classification dataset toward a goal of
-determining the features that make 'good soup'.
+What patterns emerge when mushroom descriptions are treated as categorical data?
+This educational notebook project explores the UCI Mushroom dataset from two
+angles: association rules for an odor-derived "good soup" label, and unsupervised
+grouping of recorded mushroom features. It pairs exploratory visualizations with
+decision trees, Apriori, PCA, and clustering, while preserving the original saved
+outputs and making their interpretation limits explicit.
 
 **Educational only: this is not mushroom identification, foraging, or food-safety
 advice. Do not use these notebooks, dataset labels, odor categories, or rules to
@@ -18,9 +22,30 @@ odor-based "good soup" question and association rules, then
 exploration. Each notebook loads its own data; neither depends on the other.
 You can inspect the saved outputs on GitHub without running Python.
 
+| Entry point | What to look for |
+| --- | --- |
+| [Rule-mining notebook](rule_mining_mushrooms.ipynb) | Follow the odor recoding, correlation heatmap, tree feature importances, and frequent-itemset/rule tables. |
+| [Clustering notebook](mushroom_clustering.ipynb) | Compare a Ward dendrogram, a K-means inertia curve, and cluster/class plots colored by odor. |
+| [Loader regression tests](tests/test_notebook_loaders.py) | See how both notebooks map the official UCI schema without downloading data or running models. |
+| [Illustrative loader fixture](tests/fixtures/mushroom.data) | Three rows for testing parsing only, not a dataset for analysis. |
+
 The educational questions are: which recorded features co-occur with an
 odor-derived "good" label, and how do mushrooms group by their recorded
 categorical features? Neither notebook establishes real-world edibility.
+
+## What makes this exploration interesting
+
+The two notebooks ask different questions of the same categorical records.
+Rule mining describes combinations of feature values associated with a chosen
+label; clustering groups records without using `class` in the clustering input,
+then compares those groups with the recorded class and odor. The later
+logistic-regression step has target leakage, discussed below.
+
+For reading the rule tables, **support** is the fraction of records containing
+both sides of a rule, **confidence** is the fraction with the consequent among
+records matching the antecedent, and **lift** compares that confidence with the
+consequent's overall frequency. These describe associations in the analyzed
+records, not causal relationships or safety guarantees.
 
 ## What the notebooks actually do
 
@@ -75,10 +100,17 @@ commands install the directly imported packages; they are **unverified starting
 instructions**, not a guaranteed compatible environment:
 
 ```powershell
+git clone https://github.com/vvaynethomas/mushroom-modeling.git
+cd mushroom-modeling
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install jupyterlab numpy pandas matplotlib seaborn scikit-learn scipy kneed mlxtend graphviz
 .\.venv\Scripts\python.exe -m jupyterlab
 ```
+
+In JupyterLab, open either notebook from the file browser. Read its saved outputs
+first; if experimenting, work in a copy and keep new results distinct from the
+historical outputs. The notebooks are independent entry points, not successive
+stages of a shared pipeline.
 
 The repaired loaders use the UCI endpoint above; loading the full dataset still
 requires network access. A complete top-to-bottom run has not been validated.
@@ -127,4 +159,8 @@ columns. These checks do not establish full-notebook reproducibility.
 A later reproducibility pass can record a versioned snapshot and checksum,
 document a tested dependency set, and rerun both notebooks from clean kernels.
 Correcting leakage and adding meaningful held-out evaluation would be separate
-analysis work; this loader repair preserves the original research and saved outputs.
+analysis work. Existing follow-ups track the
+[verified data and reproduction environment](https://github.com/vvaynethomas/mushroom-modeling/issues/3)
+and [leakage-free evaluation design](https://github.com/vvaynethomas/mushroom-modeling/issues/4).
+This README describes the current notebooks; it does not change their research
+or regenerate their saved outputs.
